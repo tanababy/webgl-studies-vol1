@@ -1,8 +1,7 @@
-import * as PIXI from 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.4/browser/pixi.min.mjs';
-// import * as PIXI from 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.0.4/pixi.min.mjs';
-//PIXIの処理を管理するクラス
+import * as PIXI from 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.0.4/pixi.min.mjs';
 import { Particle } from "./particle.js";
 
+//PIXIの処理を管理するクラス
 export class SceneManager {
     constructor() {
         this.texture = PIXI.Texture.from("../img/particle.png");
