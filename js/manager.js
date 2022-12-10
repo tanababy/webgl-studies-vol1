@@ -3,13 +3,11 @@ import * as PIXI from 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.4/brow
 //PIXIの処理を管理するクラス
 import { Particle } from "./particle.js";
 
-//https://api.pixijs.io/@pixi/canvas-extract/PIXI/CanvasExtract.html
-
 export class SceneManager {
     constructor() {
         this.texture = PIXI.Texture.from("../img/particle.png");
-        this.particlePoints = [];
-        this.particles = [];
+        this.particlePoints = [];//particleの座標を格納する
+        this.particles = [];//particleのオブジェクト
         this.stageWidth = window.innerWidth;
         this.stageHeight = window.innerHeight;
         this.mouse = {
@@ -49,59 +47,43 @@ export class SceneManager {
     }
 
     createText() {
-        // this.pixiParent = new PIXI.Container();
-        // const graphics = new PIXI.Graphics();
-        // graphics.beginFill(0xFFFFFF);
-        // graphics.drawRect(0, 0, window.innerWidth, window.innerHeight);
-        // this.pixiParent.addChild(graphics);
-        
-        // this.text = new PIXI.Text("あ", {
-        //     fontFamily : 'Zen Old Mincho',
-        //     fontSize: 350,
-        //     fill: 0x000000,
-        //     align: "center"
-        // });
-        // // this.text.visible = false;
-        // this.text.anchor.set(0.5, 0.5);
-        // this.text.x = window.innerWidth / 2;
-        // this.text.y = window.innerHeight / 2;
-
-        // this.pixiParent.addChild(this.text);
-        // this.stage.addChild(this.pixiParent);
-
-        this.canvas = document.createElement("canvas");
-        this.canvas.width = this.stageWidth;
-        this.canvas.height = this.stageHeight;
-        this.canvas.style.position = "absolute";
-        this.canvas.style.left = 0;
-        this.canvas.style.top = 0;
-        // document.body.appendChild(this.canvas);
-        this.ctx = this.canvas.getContext("2d");
+        const canvas = document.createElement("canvas");
+        canvas.width = this.stageWidth;
+        canvas.height = this.stageHeight;
+        canvas.style.position = "absolute";
+        canvas.style.left = 0;
+        canvas.style.top = 0;
+        document.body.appendChild(canvas);
+        this.ctx = canvas.getContext("2d");
         const myText = "か";
         const fontWidth = 350;
-        const fontSize = 400;
+        const fontSize = 500;
         const fontName = "Zen Old Mincho";
-    
+
         this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
         this.ctx.font = `${fontWidth} ${fontSize}px ${fontName}`;
         this.ctx.fillStyle = `rgba(0,0,0,0.1)`;
-        this.ctx.textBaseline = `top`;
-        // テキストのベースライン設定
         const fontPos = this.ctx.measureText(myText);
-        //テキストの情報をオブジェクトで返してくれる
-        //width : 文字列の幅 ,
-        //actualBoundingBoxLeft : baselineから左枠までの距離
-        //actualBoundingBoxRight  : baselineから右枠までの距離
-        //actualBoundingBoxAscent : baselineから上枠までの距離
-        //actualBoundingBoxDescent  : baselineから下枠までの距離
+
+        const y = fontPos.fontBoundingBoxAscent / 2 + fontPos.fontBoundingBoxDescent / 2;
+        //なんかわからないけどこれが一番テキストのリアル高さになったっぽい?
+        //ここらへん詳しい人教えて。。
+        //これfont familyによって変わるなあ
+
+        //debug only
+        // this.ctx.strokeStyle = "red";
+        // this.ctx.beginPath();
+        // this.ctx.moveTo(0, y);
+        // this.ctx.lineTo(this.stageWidth, y);
+        // this.ctx.closePath();
+        // this.ctx.stroke();
+
         this.ctx.fillText(
-          myText,
-          (this.stageWidth - fontPos.width) / 2,
-          (this.stageHeight -
-            (fontPos.actualBoundingBoxAscent + fontPos.actualBoundingBoxDescent)) /
-            2 +
-            fontPos.actualBoundingBoxAscent
-        ); //テキストの描画位置を指定。1,2引数が0,0なら左上となる。
+            myText,
+            this.stageWidth / 2 - fontPos.width / 2,
+            y + (this.stageHeight / 2 - (y / 2)),
+        );
+        //テキストの描画位置を指定。1,2引数が0,0なら左上となる。
     }
 
     getTextDotPos() {
@@ -114,26 +96,26 @@ export class SceneManager {
     
         for (let height = 0; height < this.stageHeight; height += density) {
           ++i;
-          // const slide = i % 2 === 0;
+          const slide = i % 2 === 0;//横のfor捜査のスタート位置を決める。
           width = 0;
     
-          // if (slide === false) {
-          //   width += 6;
-          // }
+          if (!slide) {//別になくてもいいけど、負荷軽減のためにやっておく
+            width += 6;
+          }
     
           for (width; width < this.stageWidth; width += density) {
-            pixel = imageData[(width + height * this.stageWidth) * 4 - 1];
+            pixel = imageData[(width + height * this.stageWidth) * 4 + 3];//alpha値を取得。imageDataはデフォルトで(0, 0, 0, 0)なので文字のところが0以外になるはず。
             if (
-              pixel !== 0 &&
-              width > 0 &&
-              width < this.stageWidth &&
-              height > 0 &&
-              height < this.stageHeight
+                pixel !== 0 &&
+                width > 0 &&
+                width < this.stageWidth &&
+                height > 0 &&
+                height < this.stageHeight
             ) {
                 this.particlePoints.push({
-                x: width,
-                y: height
-              });
+                    x: width,
+                    y: height
+                });
             }
           }
         }
@@ -176,10 +158,10 @@ export class SceneManager {
             void main(void) {
                 vec4 color = texture2D(uSampler, vTextureCoord);
                 vec3 mcolor = vec3(mr, mg, mb);
-                if(color.a > threshold) {
-                    gl_FragColor = vec4(mcolor, 1.0);
+                if(color.a > threshold) {//透明度を見る。一定の透明度以下は全て切り捨てる（＝パキッと表現）
+                    gl_FragColor = vec4(mcolor, 1.0);//黒色出力
                 } else {
-                    gl_FragColor = vec4(vec3(0.0), 0.0);
+                    discard;//なにも出力しない
                 }
             }
         `;
@@ -191,6 +173,7 @@ export class SceneManager {
         }
 
         const thresholdFilter = new PIXI.Filter(null, fragSource, uniformsData);
+        // https://api.pixijs.io/@pixi/core/PIXI/Filter.html
 
         this.stage.filters = [blurFilter, thresholdFilter];
         this.stage.filterArea = this.app.screen;
