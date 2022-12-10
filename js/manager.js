@@ -4,7 +4,7 @@ import { Particle } from "./particle.js";
 //PIXIの処理を管理するクラス
 export class SceneManager {
     constructor() {
-        this.texture = PIXI.Texture.from("/img/particle.png");
+        this.texture = PIXI.Texture.from("../img/particle.png");
         this.particlePoints = [];//particleの座標を格納する
         this.particles = [];//particleのオブジェクト
         this.stageWidth = window.innerWidth;
@@ -52,7 +52,7 @@ export class SceneManager {
         canvas.style.position = "absolute";
         canvas.style.left = 0;
         canvas.style.top = 0;
-        document.body.appendChild(canvas);
+        // document.body.appendChild(canvas);
         this.ctx = canvas.getContext("2d");
         const myText = "か";
         const fontWidth = 350;
@@ -183,17 +183,23 @@ export class SceneManager {
             const item = this.particles[i];
             const dx = this.mouse.x - item.x;
             const dy = this.mouse.y - item.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            // const dx = item.x - this.mouse.x;
+            // const dy = item.y - this.mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);//マウス座標とパーティクル座標の距離
             const minDist = item.radius + this.mouse.radius;
       
-            if (dist < minDist) {
-              const angle = Math.atan2(dy, dx);
-              const tx = item.x + Math.cos(angle) * minDist;
-              const ty = item.y + Math.sin(angle) * minDist;
-              const ax = tx - this.mouse.x;
-              const ay = ty - this.mouse.y;
-              item.vx -= ax;
-              item.vy -= ay;
+            if (dist < minDist) { //指定した距離以下の時に、下記の処理
+                const angle = Math.atan2(dy, dx);//x,y座標から角度を算出する。
+
+                //目標地点を算出する。
+                //現在位置に円形の座標を足す。
+                const tx = item.x + Math.cos(angle) * minDist;
+                const ty = item.y + Math.sin(angle) * minDist;
+
+                const ax = this.mouse.x - tx;//これ逆じゃないのなんでなんだろ
+                const ay = this.mouse.y - ty;
+                item.vx += ax;
+                item.vy += ay;
             }
       
             item.draw();
