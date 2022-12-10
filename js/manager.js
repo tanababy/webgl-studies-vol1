@@ -4,7 +4,7 @@ import { Particle } from "./particle.js";
 //PIXIの処理を管理するクラス
 export class SceneManager {
     constructor() {
-        this.texture = PIXI.Texture.from("../img/particle.png");
+        this.texture = PIXI.Texture.from("/img/particle.png");
         this.particlePoints = [];//particleの座標を格納する
         this.particles = [];//particleのオブジェクト
         this.stageWidth = window.innerWidth;
